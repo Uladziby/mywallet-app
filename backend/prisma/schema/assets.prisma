@@ -1,0 +1,57 @@
+model User {
+    id           Int            @id @default(autoincrement())
+    email        String         @unique
+    password     String         @unique
+    options      FlowOptions?
+    logActiveDay LogActiveDay[]
+    createdAt    DateTime       @default(now()) @map("created_at")
+    updatedAt    DateTime       @updatedAt @map("updated_at")
+    userData     UserData?
+
+    @@map("user")
+}
+
+model UserData {
+    userId     Int        @id @map("user_id")
+    user       User       @relation(fields: [userId], references: [id])
+    categories Category[] @relation("UserData")
+
+    @@map("user_data")
+}
+
+model Category {
+    id           Int      @id @default(autoincrement())
+    title        String
+    assetsUserId Int      @map("assets_user_id")
+    userData     UserData @relation("UserData", fields: [assetsUserId], references: [userId])
+    asset        Asset[]
+
+    @@map("categories")
+}
+
+model Asset {
+    id           Int         @id @default(autoincrement())
+    name         String      @db.VarChar(100)
+    place        String      @db.VarChar(100)
+    balance      Int         @db.Integer
+    change       Decimal     @db.Decimal(10, 2)
+    imageUri     AssetImage?
+    typeCurrency String      @db.VarChar(100)
+    categoryId   Int         @map("category_id")
+    category     Category    @relation(fields: [categoryId], references: [id])
+
+    @@map("asset")
+}
+
+enum Title {
+    Crypto
+    Bank_Account
+    Cash
+}
+
+enum AssetImage {
+    bitcoin
+    etherium
+    usd
+    eur
+}

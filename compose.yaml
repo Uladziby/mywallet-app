@@ -1,0 +1,64 @@
+name: mywallet
+
+services:
+  backend:
+    build:
+      context: ./backend
+    env_file:
+      - ./backend/.env
+    environment:
+      NODE_ENV: development
+      PORT: 3030
+    command: yarn start:dev
+    ports:
+      - "3030:3030"
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./backend/src
+          target: /app/src
+          ignore:
+            - generated/prisma/
+        - action: rebuild
+          path: ./backend/package.json
+        - action: rebuild
+          path: ./backend/yarn.lock
+        - action: rebuild
+          path: ./backend/prisma
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      CI: "false"
+      EXPO_PUBLIC_SERVER_URL: http://10.0.2.2:3030/api
+      EXPO_PUBLIC_SERVER_URL_WEB: http://localhost:3030/api
+      EXPO_PUBLIC_CURRENCIES_API_URL: https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies
+      EXPO_PUBLIC_BASE_URL: http://localhost:8081
+      EXPO_PUBLIC_SCHEME: mywallet://
+    ports:
+      - "8081:8081"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /app
+          ignore:
+            - node_modules/
+            - .expo/
+            - .git/
+            - .env
+            - .env.*
+            - package.json
+            - yarn.lock
+            - Dockerfile
+            - .dockerignore
+        - action: rebuild
+          path: ./frontend/package.json
+        - action: rebuild
+          path: ./frontend/yarn.lock
